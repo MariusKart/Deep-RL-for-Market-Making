@@ -28,4 +28,5 @@ Market makers provide liquidity by posting buy and sell quotes. Their objective 
 ├── core/          # contains the simulation environment and functions
 ├── notebooks/     # numerical experimentations
 ├── training/      # training functions      
+├── config/        # constants and training parameters
 ├── README.md
