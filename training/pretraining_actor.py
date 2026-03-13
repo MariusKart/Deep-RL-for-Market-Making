@@ -70,5 +70,5 @@ def save_actors(actors, selected):
     save_dir.mkdir(exist_ok=True)
 
     for i, actor in enumerate(actors):
-        torch.save(actor.state_dict(), save_dir / f"actor_{selected[i]}_{len(selected)}_bond_scenario.pt")
-        print(f"Actor saved to : 'actor_{selected[i]}_{len(selected)}_bond_scenario.pt'")
+        torch.save(actor.state_dict(), save_dir / f"actor_{selected[i]}_pretrained.pt")
+        print(f"Actor saved to : 'actor_{selected[i]}_pretrained.pt'")
