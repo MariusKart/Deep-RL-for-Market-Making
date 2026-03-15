@@ -3,7 +3,8 @@ import torch
 from config.constants import *
 from core.SimulationEnvironment import *
 from core.models import *
-
+torch.manual_seed(42)    
+np.random.seed(42)      
 
 def update_actor_i(
     actor_i,
@@ -101,8 +102,8 @@ def update_actor_i(
         if V_trade.dim() == 2:
             V_trade = V_trade[:, 0]
 
-        psi_q = 0.5 * float(GAMMA) * torch.einsum("bi,ij,bj->b", S_t, Sigma_t, S_t)
-        psi_trade = 0.5 * float(GAMMA) * torch.einsum("bi,ij,bj->b", S_trade_t, Sigma_t, S_trade_t)
+        psi_q = 0.5 * float(GAMMA) * torch.sqrt(torch.einsum("bi,ij,bj->b", S_t, Sigma_t, S_t))
+        psi_trade = 0.5 * float(GAMMA) * torch.sqrt(torch.einsum("bi,ij,bj->b", S_trade_t, Sigma_t, S_trade_t))
 
         score_base = (
             p_base_t * (size_i * delta_base_t - psi_trade / denom_t + gamma_t * V_trade)

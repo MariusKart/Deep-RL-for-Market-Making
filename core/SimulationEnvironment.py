@@ -25,7 +25,7 @@ class Market:
         self.rng = np.random.default_rng(seed)
         self.sizes= sizes
 
-    def generateRFQs(self, n, seed=None):
+    def generateRFQs(self, n, seed=42):
         """
         RFQ generation: returns arrays (i, direction, size).
         """
@@ -129,7 +129,7 @@ class MarketMaker():
             p[m] = np.asarray(self.Market.f(int(j), delta[m]), dtype=float)
         p = np.clip(p, NU, 1.0 - NU)
 
-        psi_q = 0.5 * float(GAMMA) * np.einsum("bi,ij,bj->b", inv, Sigma, inv)
+        psi_q = 0.5 * float(GAMMA) * np.sqrt(np.einsum("bi,ij,bj->b", inv, Sigma, inv))
         
         avg_sizes = np.asarray(avg_sizes, dtype=float).reshape(-1)
         size = avg_sizes[i]

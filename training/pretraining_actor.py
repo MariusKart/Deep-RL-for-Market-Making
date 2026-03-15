@@ -6,7 +6,8 @@ from config.constants import *
 from scipy.optimize import minimize
 import torch.optim as optim
 from pathlib import Path
-
+torch.manual_seed(42)    
+np.random.seed(42)
 
 device_used = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -65,10 +66,10 @@ def pretrain_actor(actor, target_p_i, LB_risk, UB_risk, avg_sizes, n_samples=100
     return actor
 
 
-def save_actors(actors, selected):
+def save_pretrained_actors(actors, selected):
     save_dir = Path("pretrained_actors")
     save_dir.mkdir(exist_ok=True)
 
     for i, actor in enumerate(actors):
-        torch.save(actor.state_dict(), save_dir / f"actor_{selected[i]}_pretrained.pt")
-        print(f"Actor saved to : 'actor_{selected[i]}_pretrained.pt'")
+        torch.save(actor.state_dict(), save_dir / f"actor_{selected[i]}_{len(selected)}_scenario.pt")
+        print(f"Actor saved to : 'actor_{selected[i]}_{len(selected)}_scenario.pt'")

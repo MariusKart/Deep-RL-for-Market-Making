@@ -9,7 +9,8 @@ import torch.optim as optim
 import os
 from torch.utils.data import DataLoader, TensorDataset
 device_used = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+torch.manual_seed(42)    
+np.random.seed(42)
 from pathlib import Path
 
 
@@ -31,7 +32,7 @@ def solve_1d_value_fixed_policy(
     gamma_rl = (2.0 * market.lambda_RFQs[i]) / (RF + 2.0 * market.lambda_RFQs[i])
 
     def psi(q):
-        return 0.5 * GAMMA * market.Sigma[i][i] * q * q
+        return 0.5 * GAMMA * np.sqrt(market.Sigma[i][i] * q * q)
 
     A = np.zeros((n, n), dtype=float)
     b = np.zeros(n, dtype=float)
@@ -133,7 +134,7 @@ def pretrain_critic(
 
     return critic
 
-def save_critic(critic, selected):
+def save_pretrained_critic(critic, selected):
     save_dir = Path("pretrained_critic")
     save_dir.mkdir(exist_ok=True)
     torch.save(critic.state_dict(), save_dir / f"critic_bonds_{selected}_{len(selected)}_bond_scenario.pt")

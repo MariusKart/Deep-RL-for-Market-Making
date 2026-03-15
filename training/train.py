@@ -8,7 +8,8 @@ from core.rollout import *
 import matplotlib.pyplot as plt
 from training.critic_update import * 
 from training.actor_update import *
-
+torch.manual_seed(42)    
+np.random.seed(42)
 
 def train_final(
     actors,                  # list or dict of per-bond actors (length d)
@@ -32,7 +33,7 @@ def train_final(
     UB_max=None,
     critic_lr=1e-3,
     actor_lr=1e-2,
-    seed=None,
+    seed=42,
     device=None,
 ):
     """
@@ -185,14 +186,7 @@ def train_final(
                 
             )
 
-    # ---------- plot ----------
-    plt.figure()
-    plt.plot(avg_reward_long_hist)
-    plt.xlabel("Training step")
-    plt.ylabel("Average reward per RFQ (long rollout)")
-    plt.title("Average reward per RFQ during training")
-    plt.grid(True, alpha=0.3)
-    plt.show()
+
 
     return {
         "avg_reward_long": np.asarray(avg_reward_long_hist, dtype=float),

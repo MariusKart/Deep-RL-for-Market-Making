@@ -3,7 +3,8 @@ from config.constants import *
 from core.SimulationEnvironment import *
 from core.models import *
 import torch
-
+torch.manual_seed(42)    
+np.random.seed(42)
 
 def update_critic_td(
     critic : Critic,

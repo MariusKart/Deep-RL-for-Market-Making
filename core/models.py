@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+torch.manual_seed(42)    
 
 class Actor(nn.Module):
     def __init__(self, state_dim, hidden= 30):
