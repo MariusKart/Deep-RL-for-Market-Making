@@ -25,7 +25,7 @@ class Market:
         self.rng = np.random.default_rng(seed)
         self.sizes= sizes
 
-    def generateRFQs(self, n, seed=42):
+    def generateRFQs(self, n, seed=None):
         """
         RFQ generation: returns arrays (i, direction, size).
         """
@@ -113,7 +113,7 @@ class MarketMaker():
         i = np.asarray(i, dtype=int).reshape(-1)
         direction = np.asarray(direction, dtype=int).reshape(-1)
         delta = np.asarray(delta, dtype=float).reshape(-1)
-
+        delta = np.clip(delta, a_min= NU, a_max = 1e12)
         B, d = inv.shape
         if i.shape[0] != B or direction.shape[0] != B or delta.shape[0] != B:
             raise ValueError("inventories, i, direction, delta must have compatible batch sizes")
@@ -152,7 +152,7 @@ class MarketMaker():
         inv_exec = inv_exec_raw.copy()
         inv_exec[~feasible] = inv[~feasible]
 
-        psi_q_exec = 0.5 * float(GAMMA) * np.einsum("bi,ij,bj->b", inv_exec, Sigma, inv_exec)
+        psi_q_exec = 0.5 * float(GAMMA) * np.sqrt(np.einsum("bi,ij,bj->b", inv_exec, Sigma, inv_exec))
 
         # Expected immediate reward with effective probability
         rewards_exp = p_eff * size * delta - (p_eff * psi_q_exec + (1.0 - p_eff) * psi_q) / denom

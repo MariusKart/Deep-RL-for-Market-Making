@@ -57,7 +57,7 @@ def update_critic_td(
     deltas = np.empty(N, dtype=np.float32)
     for k in range(N):
         i = int(bond_ids[k])
-        deltas[k] = float(market.inv_f(i, float(a_clip[k])))
+        deltas[k] = np.clip(float(market.inv_f(i, float(a_clip[k]))), a_max=1e12, a_min=NU)
 
     p = np.empty(N, dtype=np.float32)
     for i in np.unique(bond_ids):

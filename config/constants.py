@@ -68,7 +68,7 @@ COV = np.array([
 
 RF = 1e-4
 
-GAMMA = 2e-5
+GAMMA = 5e-2
 
 DISCOUNT_RL = 2*np.sum(ARRIVAL_RATES)/(RF+2 * np.sum(ARRIVAL_RATES))
 

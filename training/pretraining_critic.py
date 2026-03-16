@@ -102,12 +102,11 @@ def produce_initial_value_grid(market :Market, init_strategy, lb_risk, ub_risk, 
     critic_input = np.array(grids).T
     return critic_target, critic_input
 
-
 def pretrain_critic(
     critic: nn.Module,
     input, target,
     epochs = 100,
-    lr = 5e-8,
+    lr = 1e-2,
     device= device_used,
 ):
 

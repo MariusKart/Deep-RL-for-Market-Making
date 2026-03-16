@@ -1,8 +1,7 @@
 from core.SimulationEnvironment import *
 from config.constants import *
 import torch
-torch.manual_seed(42)     
-np.random.seed(42)         
+
 
 
 

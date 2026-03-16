@@ -59,8 +59,8 @@ def update_actor_i(
     S_trade_i[:, i] = np.clip(S_trade_i[:, i], float(lb[i]), float(ub[i]))
 
     # ---- market-side quote reconstruction ----
-    delta_base_i = np.asarray(market.inv_f(i, p_base_i), dtype=np.float32)
-    delta_noisy_i = np.asarray(market.inv_f(i, p_noisy_i), dtype=np.float32)
+    delta_base_i = np.clip(np.asarray(market.inv_f(i, p_base_i), dtype=np.float32), a_max= 1e12, a_min = NU)
+    delta_noisy_i = np.clip(np.asarray(market.inv_f(i, p_noisy_i), dtype=np.float32), a_max= 1e12, a_min = NU)
 
     dp_i = p_noisy_i - p_base_i
 

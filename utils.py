@@ -32,10 +32,8 @@ def plot_avg_reward(avg_reward, save_dir="figures", filename="avg_reward.eps"):
 
     ax.set_xlabel("Training step", fontsize=12)
     ax.set_ylabel("Average reward", fontsize=12)
-    ax.set_title("Average reward per RFQ during training", fontsize=13, pad=12)
 
     ax.grid(False, alpha=0.35)
-    ax.legend(frameon=False)
     ax.margins(x=0.01)
 
     ax.spines["top"].set_visible(False)

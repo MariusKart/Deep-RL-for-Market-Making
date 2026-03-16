@@ -14,19 +14,19 @@ device_used = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu"
 
 # Produce the myopic probabilities and quotes as a target for the actors : 
 
-def myopic_probs(d: int, market_env: Market):
+def myopic_probs(selected_bonds: int, market_env: Market):
     """
     For each bond i, compute myopic delta_i* = argmax_{delta>=0} delta * f_i(delta),
     then return p_i = f_i(delta_i*).
     """
-    p = np.zeros(d, dtype=float)
-    delta_star = np.zeros(d, dtype=float)
+    p = np.zeros(len(selected_bonds), dtype=float)
+    delta_star = np.zeros(len(selected_bonds), dtype=float)
 
-    for i in range(d):
+    for i in range(len(selected_bonds)):
         def objective(x):
             delta = x[0]
             
-            return -(delta * market_env.f(i,delta))
+            return -(delta * market_env.f(selected_bonds[i],delta))
 
         res = minimize(
                 objective,
@@ -36,7 +36,7 @@ def myopic_probs(d: int, market_env: Market):
         delta_i = float(res.x[0])
         delta_star[i] = delta_i
 
-        p[i] = float(market_env.f(i, delta_i))
+        p[i] = float(market_env.f(selected_bonds[i], delta_i))
 
     return p, delta_star
 
