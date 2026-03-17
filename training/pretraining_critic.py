@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 from core.SimulationEnvironment import *
 from core.models import *
 from config.constants import *
-from scipy.optimize import minimize
-import torch.optim as optim
-import os
-from torch.utils.data import DataLoader, TensorDataset
+from scipy.interpolate import interp1d
+from torch import optim
+import itertools
+
 device_used = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(42)    
 np.random.seed(42)
@@ -23,7 +23,7 @@ def solve_1d_value_fixed_policy(
     delta_bid,
     delta_ask,
 ):
-    grid = np.arange(LB_i, UB_i + 1e-12, rfq_size, dtype=float)
+    grid = np.arange(LB_i, UB_i, rfq_size, dtype=float)
     n = grid.size
 
     p_bid = float(market.f(i, delta_bid))
@@ -77,10 +77,9 @@ def solve_1d_value_fixed_policy(
         b[k] = rhs
 
     V = np.linalg.solve(A, b)
+    V = V - V[n // 2]
     return grid, V
-
-
-def produce_initial_value_grid(market :Market, init_strategy, lb_risk, ub_risk, nb_bonds, sizes):
+def produce_initial_value_grid(market: Market, init_strategy, lb_risk, ub_risk, nb_bonds, sizes):
     grids = []
     Vs = []
 
@@ -91,47 +90,80 @@ def produce_initial_value_grid(market :Market, init_strategy, lb_risk, ub_risk, 
             LB_i=float(lb_risk[i]),
             UB_i=float(ub_risk[i]),
             rfq_size=sizes[i],
-
             delta_bid=float(init_strategy[i]),
             delta_ask=float(init_strategy[i]),
         )
         grids.append(grid_i)
         Vs.append(V_i)
-        
-    critic_target = np.sum(np.array(Vs), axis = 0)
+
+    critic_target = np.sum(np.array(Vs), axis=0)
     critic_input = np.array(grids).T
-    return critic_target, critic_input
+
+    return critic_target, critic_input, grids, Vs
+
 
 def pretrain_critic(
-    critic: nn.Module,
-    input, target,
-    epochs = 100,
-    lr = 1e-2,
-    device= device_used,
+    critic,
+    grids,          # list of 1D grids, one per bond
+    Vs,             # list of 1D value arrays, one per bond
+    sizes,
+    device="cpu",
+    n_dense=1000,
+    lr=1e-2,
+    max_steps=3000,
+    tol=1e-4,
 ):
+    nb_bonds = len(grids)
 
-    # NN input uses normalized inventory q/z
-    X = torch.tensor(input, dtype=torch.float32)
-    Y = torch.tensor(target, dtype=torch.float32).unsqueeze(1)
+    # 1D interpolator for each bond
+    interpolants = []
+    dense_axes = []
 
+    for i in range(nb_bonds):
+        grid_i = np.asarray(grids[i], dtype=np.float32).reshape(-1)
+        V_i = np.asarray(Vs[i], dtype=np.float32).reshape(-1)
 
-    critic = critic.to(device)
-    opt = torch.optim.Adam(critic.parameters(), lr=lr)
+        f_i = interp1d(grid_i, V_i, kind="cubic")
+        interpolants.append(f_i)
+
+        dense_axis_i = np.linspace(grid_i.min(), grid_i.max(), n_dense, dtype=np.float32)
+        dense_axes.append(dense_axis_i)
+
+    # Cartesian product grid in ORIGINAL q-space
+    mesh = np.meshgrid(*dense_axes, indexing="ij")
+    X_orig = np.stack([m.ravel() for m in mesh], axis=1).astype(np.float32)
+
+    # Target = sum of 1D interpolated values
+    Y_dense = np.zeros((X_orig.shape[0], 1), dtype=np.float32)
+    for i in range(nb_bonds):
+        Y_dense[:, 0] += interpolants[i](X_orig[:, i]).astype(np.float32)
+
+    # critic ALWAYS receives q / sizes
+    X_scaled = X_orig / np.asarray(sizes, dtype=np.float32).reshape(1, -1)
+
+    X = torch.tensor(X_scaled, dtype=torch.float32, device=device)
+    Y = torch.tensor(Y_dense, dtype=torch.float32, device=device)
+
+    critic = critic.to(device).float()
+    critic.train()
+
+    opt = optim.Adam(critic.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
 
-    critic.train()
-    for _ in range(epochs):
-        xb = X.to(device)
-        yb = Y.to(device)
-
-        pred = critic(xb)        
-        loss = loss_fn(pred, yb)
-
+    for step in range(max_steps):
         opt.zero_grad()
+        pred = critic(X)
+        loss = loss_fn(pred, Y)
         loss.backward()
         opt.step()
 
+
+        if loss.item() < tol:
+            print(f"stopped early at step {step}, loss={loss.item():.6f}")
+            break
+
     return critic
+
 
 def save_pretrained_critic(critic, selected):
     save_dir = Path("pretrained_critic")

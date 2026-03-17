@@ -50,10 +50,10 @@ def train_final(
         d = len(actors)
         policy = list(actors)
 
-    critic_opt = torch.optim.Adam(critic.parameters(), lr=critic_lr)
-    actor_opts = {i: torch.optim.Adam(policy[i].parameters(), lr=actor_lr) for i in range(d)}
+    critic_opt = torch.optim.SGD(critic.parameters(), lr=critic_lr)
+    actor_opts = {i: torch.optim.SGD(policy[i].parameters(), lr=actor_lr) for i in range(d)}
 
-    # paper-style: no target network (semi-gradient via no_grad inside update_critic_td)
+    # no target network (semi-gradient via no_grad inside update_critic_td)
     target_critic = critic
 
     # ----- risk limits -----
@@ -87,8 +87,8 @@ def train_final(
 
         # ---------- long rollout (single) ----------  
         flat = np.zeros(d, dtype=float)
-        
-        S_long, A_base_long, A_noisy_long, D_long, R_long, S_trade_long = rollout(
+
+        S_long, A_base_long, D_long, R_long, S_trade_long = rollout(
             policy=policy,
             starting_inventory=flat,
             horizon=long_horizon,
@@ -107,7 +107,7 @@ def train_final(
         # ---------- short rollouts (batched) ----------
         if nb_short_rollouts > 0:
             q0_batch = rng.uniform(LB, UB, size=(nb_short_rollouts, d)).astype(float)
-            S_s, A_base_s, A_noisy_s, D_s, R_s, S_trade_s = rollout(
+            S_s, A_base_s, D_s, R_s, S_trade_s = rollout(
                 policy=policy,
                 starting_inventory=q0_batch,
                 horizon=short_horizon,
@@ -124,14 +124,12 @@ def train_final(
             R_all       = np.concatenate([np.asarray(R_long, dtype=float).reshape(-1), np.asarray(R_s, dtype=float).reshape(-1)], axis=0)
             S_trade_all = np.vstack([np.asarray(S_trade_long, dtype=float), np.asarray(S_trade_s, dtype=float)])
             A_base_all  = np.vstack([np.asarray(A_base_long, dtype=float), np.asarray(A_base_s, dtype=float)])
-            A_noisy_all = np.vstack([np.asarray(A_noisy_long, dtype=float), np.asarray(A_noisy_s, dtype=float)])
             D_all       = np.concatenate([np.asarray(D_long, dtype=int).reshape(-1), np.asarray(D_s, dtype=int).reshape(-1)], axis=0)
         else:
             S_all       = np.asarray(S_long, dtype=float)
             R_all       = np.asarray(R_long, dtype=float).reshape(-1)
             S_trade_all = np.asarray(S_trade_long, dtype=float)
             A_base_all  = np.asarray(A_base_long, dtype=float)
-            A_noisy_all = np.asarray(A_noisy_long, dtype=float)
             D_all       = np.asarray(D_long, dtype=int).reshape(-1)
 
         bond_ids = A_base_all[:, 0].astype(int)
@@ -163,7 +161,6 @@ def train_final(
 
             S_i = S_all[m]
             p_base_i = A_base_all[m, 1]    # probability column
-            p_noisy_i = A_noisy_all[m, 1]  # probability column
             D_i = D_all[m]
 
             update_actor_i(
@@ -172,8 +169,6 @@ def train_final(
                 optimizer=actor_opts[i],
                 market=market,
                 S_i=S_i,
-                p_base_i=p_base_i,
-                p_noisy_i=p_noisy_i,
                 D_i=D_i,
                 i=i,
                 avg_sizes= avg_sizes,
@@ -183,9 +178,7 @@ def train_final(
                 device=device,
                 ub= UB,
                 lb = LB
-                
             )
-
 
 
     return {

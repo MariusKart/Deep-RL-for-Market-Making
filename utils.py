@@ -1,6 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 from pathlib import Path
+import numpy as np
 import pandas as pd
 
 def save_actors(actors, selected):
@@ -58,3 +59,111 @@ def save_reward_to_csv(avg_reward, column_name, csv_path="data/training_reward.c
         df_new.to_csv(csv_path, index=False)
 
     return csv_path
+
+def plot_critic(
+    critic,
+    critic_input,   # ORIGINAL q
+    sizes,
+    device="cpu",
+    n_plot=500,
+):
+    critic.eval()
+
+    q_orig = np.asarray(critic_input, dtype=np.float32).reshape(-1, 1)
+
+    # dense grid in ORIGINAL q-space for plotting
+    q_plot_orig = np.linspace(
+        q_orig[:, 0].min(),
+        q_orig[:, 0].max(),
+        n_plot,
+        dtype=np.float32
+    ).reshape(-1, 1)
+
+    # critic receives q / SIZES
+    q_plot_scaled = q_plot_orig / np.asarray(sizes, dtype=np.float32).reshape(1, -1)
+    X_plot = torch.tensor(q_plot_scaled, dtype=torch.float32, device=device)
+
+    with torch.no_grad():
+        y_plot = critic(X_plot).cpu().numpy().reshape(-1)
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(q_plot_orig[:, 0], y_plot, label="critic value")
+    plt.xlabel("q")
+    plt.ylabel("theta")
+    plt.title("Critic value function")
+
+    plt.grid(True)
+    plt.show()
+    
+    
+    
+
+def plot_critic_2d(
+    critic,
+    LB_RISK,
+    UB_RISK,
+    sizes,
+    selected_bonds,
+    device="cpu",
+):
+    critic.eval()
+
+    grid_0 = np.arange(
+        LB_RISK[0],
+        UB_RISK[0] + sizes[0],
+        sizes[0],
+        dtype=np.float32
+    )
+
+    grid_1 = np.arange(
+        LB_RISK[1],
+        UB_RISK[1] + sizes[1],
+        sizes[1],
+        dtype=np.float32
+    )
+
+    Q0, Q1 = np.meshgrid(grid_0, grid_1, indexing="ij")
+
+    # original q grid, but critic gets q / sizes
+    X = np.column_stack([
+        Q0.ravel() / sizes[0],
+        Q1.ravel() / sizes[1],
+    ]).astype(np.float32)
+
+    X_t = torch.tensor(X, dtype=torch.float32, device=device)
+
+    with torch.no_grad():
+        V = critic(X_t)
+        if V.dim() == 2 and V.shape[1] == 1:
+            V = V[:, 0]
+        V = V.cpu().numpy()
+
+    V_grid = V.reshape(Q0.shape)
+
+    out_path = Path(f"figures/critic_value_function_{selected_bonds}.eps")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection="3d")
+
+    ax.plot_surface(
+        Q0,
+        Q1,
+        V_grid,
+        cmap="viridis",    
+        linewidth=0,
+        antialiased=True,
+        shade=True
+    )
+
+    ax.set_xlabel(f"Inventory in bond {selected_bonds[0]}")
+    ax.set_ylabel(f"Inventory in bond {selected_bonds[1]}")
+    ax.set_zlabel("Value")
+    ax.set_title("Value")
+
+
+    ax.view_init(elev=25, azim=-60)
+
+    plt.tight_layout()
+    fig.savefig(out_path, format="eps", bbox_inches="tight")
+    plt.show()

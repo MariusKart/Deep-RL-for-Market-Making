@@ -113,7 +113,7 @@ class MarketMaker():
         i = np.asarray(i, dtype=int).reshape(-1)
         direction = np.asarray(direction, dtype=int).reshape(-1)
         delta = np.asarray(delta, dtype=float).reshape(-1)
-        delta = np.clip(delta, a_min= NU, a_max = 1e12)
+
         B, d = inv.shape
         if i.shape[0] != B or direction.shape[0] != B or delta.shape[0] != B:
             raise ValueError("inventories, i, direction, delta must have compatible batch sizes")

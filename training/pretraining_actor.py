@@ -41,25 +41,43 @@ def myopic_probs(selected_bonds: int, market_env: Market):
     return p, delta_star
 
 
-def pretrain_actor(actor, target_p_i, LB_risk, UB_risk, avg_sizes, n_samples=100000, epochs=100, lr=1e-2, device=device_used):
+def pretrain_actor(
+    actor,
+    target_p_i,
+    LB_risk,
+    UB_risk,
+    avg_sizes,
+    batch_size=50,
+    epochs=1000,
+    lr=1e-3,
+    device=device_used,
+):
     d = LB_risk.shape[0]
 
-    q = np.random.uniform(LB_risk, UB_risk, size=(n_samples, d)).astype(np.float32)
-    q = q / avg_sizes.reshape(1, d).astype(np.float32)
+    LB = torch.tensor(LB_risk, dtype=torch.float32, device=device).reshape(1, d)
+    UB = torch.tensor(UB_risk, dtype=torch.float32, device=device).reshape(1, d)
+    avg = torch.tensor(avg_sizes, dtype=torch.float32, device=device).reshape(1, d)
 
-    states = torch.tensor(q, dtype=torch.float32, device=device)           # (N,d)
-    targets = torch.full((n_samples, 1), float(target_p_i), dtype=torch.float32, device=device)  # (N,1)
 
-    optimizer = optim.Adam(actor.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
+    optimizer = optim.Adam(actor.parameters(), lr=lr)
 
+    actor = actor.to(device)
     actor.train()
+
     for _ in range(epochs):
-        pred = actor(states)
-        if pred.dim() == 1:
-            pred = pred.unsqueeze(1)  # (N,1)
-        loss = loss_fn(pred, targets)
         optimizer.zero_grad()
+
+        q_rand = LB + (UB - LB) * torch.rand(batch_size, d, device=device)
+        q_rand = q_rand / avg
+
+        pred = actor(q_rand)
+        if pred.dim() == 1:
+            pred = pred.unsqueeze(1)
+
+        target = torch.full((batch_size, 1), float(target_p_i), dtype=torch.float32, device=device)
+
+        loss = loss_fn(pred, target)
         loss.backward()
         optimizer.step()
 
