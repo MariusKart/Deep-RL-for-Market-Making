@@ -60,16 +60,23 @@ def save_reward_to_csv(avg_reward, column_name, csv_path="data/training_reward.c
 
     return csv_path
 
+
 def plot_critic(
     critic,
-    critic_input,   # ORIGINAL q
-    sizes,
+    size,
+    lb_risk, 
+    ub_risk,
     device="cpu",
     n_plot=500,
 ):
     critic.eval()
 
-    q_orig = np.asarray(critic_input, dtype=np.float32).reshape(-1, 1)
+    q_orig = np.arange(
+        lb_risk,
+        ub_risk + size,
+        size,
+        dtype=np.float32
+    ).reshape(-1, 1)
 
     # dense grid in ORIGINAL q-space for plotting
     q_plot_orig = np.linspace(
@@ -80,7 +87,7 @@ def plot_critic(
     ).reshape(-1, 1)
 
     # critic receives q / SIZES
-    q_plot_scaled = q_plot_orig / np.asarray(sizes, dtype=np.float32).reshape(1, -1)
+    q_plot_scaled = q_plot_orig / np.asarray(size, dtype=np.float32).reshape(1, -1)
     X_plot = torch.tensor(q_plot_scaled, dtype=torch.float32, device=device)
 
     with torch.no_grad():
@@ -94,8 +101,6 @@ def plot_critic(
 
     plt.grid(True)
     plt.show()
-    
-    
     
 
 def plot_critic_2d(

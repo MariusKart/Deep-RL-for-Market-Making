@@ -95,11 +95,7 @@ def produce_initial_value_grid(market: Market, init_strategy, lb_risk, ub_risk, 
         )
         grids.append(grid_i)
         Vs.append(V_i)
-
-    critic_target = np.sum(np.array(Vs), axis=0)
-    critic_input = np.array(grids).T
-
-    return critic_target, critic_input, grids, Vs
+    return grids, Vs
 
 
 def pretrain_critic(
@@ -108,7 +104,7 @@ def pretrain_critic(
     Vs,             # list of 1D value arrays, one per bond
     sizes,
     device="cpu",
-    n_dense=1000,
+    n_dense=100,
     lr=1e-2,
     max_steps=3000,
     tol=1e-4,
