@@ -184,6 +184,4 @@ def train_final(
     return {
         "avg_reward_long": np.asarray(avg_reward_long_hist, dtype=float),
         "critic_loss": np.asarray(critic_loss_hist, dtype=float),
-        "LB_final": LB.copy(),
-        "UB_final": UB.copy(),
     }

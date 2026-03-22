@@ -1,12 +1,10 @@
-
+from scipy.interpolate import interp1d
 import torch
-import matplotlib.pyplot as plt
 from core.SimulationEnvironment import *
 from core.models import *
 from config.constants import *
 from scipy.interpolate import interp1d
 from torch import optim
-import itertools
 
 device_used = "cpu" #torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.manual_seed(42)    
@@ -15,7 +13,6 @@ from pathlib import Path
 
 
 # Produce a 1D Grid of Q and the corresponding value functions in the separable (uncorelated) case given "myopic" policy
-
 def solve_1d_value_fixed_policy(
     market: Market, i,
     LB_i, UB_i,

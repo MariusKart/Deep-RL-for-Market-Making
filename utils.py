@@ -18,7 +18,7 @@ def save_critic(critic, selected):
     torch.save(critic.state_dict(), save_dir / f"critic_bonds_{selected}_{len(selected)}_bond_scenario.pt")
     print(f"Critic saved to : 'trained_models/critic_bonds_{selected}_{len(selected)}_bond_scenario.pt'")
 
-def plot_avg_reward(avg_reward, save_dir="figures", filename="avg_reward.eps"):
+def plot_avg_reward(avg_reward, save_dir="figures", filename="avg_reward.png"):
     save_path = Path(save_dir)
     save_path.mkdir(parents=True, exist_ok=True)
     file_path = save_path / filename
@@ -145,7 +145,7 @@ def plot_critic_2d(
 
     V_grid = V.reshape(Q0.shape)
 
-    out_path = Path(f"figures/critic_value_function_{selected_bonds}.eps")
+    out_path = Path(f"figures/critic_value_function_{selected_bonds}.png")
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     fig = plt.figure(figsize=(8, 6))
