@@ -1,6 +1,6 @@
 # Deep RL for Market Making
 
-This repository contains an initial implementation of a coursework project for the **Reinforcement Learning** module (Spring 2026) in the **MSc Mathematics and Finance** at **Imperial College London**.
+This repository contains an initial implementation of a coursework project for the **Market Microstructure** module (Spring 2026) in the **MSc Mathematics and Finance** at **Imperial College London**.
 
 The project aims to reproduce and explore the approach in **Guéant et al. (2019)**, applying **deep reinforcement learning** to the problem of **market making**. The focus is on designing an agent that learns bid/ask quoting strategies while managing inventory risk in a simulated trading environment.
 
