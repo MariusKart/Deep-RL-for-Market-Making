@@ -1,6 +1,6 @@
 # Deep Reinforcement Learning for Market Making in Corporate Bonds
 
-This repository contains a reproduction of the paper *Deep Reinforcement Learning for Market Making in Corporate Bonds* by Guéant and Manziuk, together with a simple policy-improvement variant developed as part of the Reinforcement Learning coursework in the MSc Mathematics and Finance at Imperial College London.
+This repository contains a reproduction of the paper *Deep Reinforcement Learning for Market Making in Corporate Bonds* by Guéant and Manziuk, together with a simple policy-improvement variant developed as part of the Market Microstructure coursework in the MSc Mathematics and Finance at Imperial College London.
 
 The project studies market making on multi-dealer-to-client corporate bond platforms. A dealer receives RFQs, chooses bid and ask quotes, earns spread when trades occur, and at the same time must control inventory risk. In low dimension, this problem can be approached with classical stochastic control and HJB methods. In higher dimension, these methods become difficult to use in practice because the inventory state space grows too quickly.
 
@@ -41,12 +41,110 @@ The critic is the strongest part of the original methodology because, in this mo
 
 This greedy improvement step is much simpler than learning a second neural network for the policy. It is also more interpretable. Its limitation is scalability: once the number of bonds grows, the state-action space becomes too large and the tabular approach loses its appeal. For that reason, it should be viewed as a useful low-dimensional alternative rather than a replacement for the original actor--critic framework.
 
-## Repository structure
+## Methodologies available
+
+The repository now supports two training methodologies.
+
+### 1. Classic
+This is the paper-style actor--critic implementation:
+- one symmetric neural actor per bond,
+- one critic neural network,
+- actor outputs probabilities of trade,
+- probabilities are converted into quotes through the execution model,
+- actor is improved through the perturbation-based update used in the notebook,
+- critic is updated by TD learning from long and short rollouts.
+
+### 2. Greedy
+This is the alternative low-dimensional methodology:
+- one table actor per bond,
+- one critic neural network,
+- critic is updated exactly as above,
+- the actor is not updated by gradient descent,
+- instead, after each critic step, the policy is greedily refreshed over a grid of admissible trade probabilities.
+
+## Pretraining logic
+
+### Single-bond case
+The single-bond pipeline follows the notebook:
+- actor pretraining on the myopic probability,
+- critic pretraining from a finite-difference approximation of the 1D value function,
+- final training with long and short rollouts and the risk-limit schedule.
+
+### Multi-bond case
+For the classic methodology, multi-bond warm-start relies on stored learned 1D datasets:
+- each single-bond run exports learned values and learned bid/ask quote curves,
+- multi-bond critic pretraining uses the additive approximation  
+  `V(q) ≈ Σ_i V_i(q_i)`,
+- each actor is pretrained from the corresponding stored 1D quote curve.
+
+For the greedy methodology, the current implementation keeps the table-actor spirit of the alternative notebook:
+- critic pretraining from finite-difference value grids,
+- table actors initialized from myopic probabilities,
+- greedy policy refresh during final training.
+
+## Output structure
+
+Outputs are separated by methodology so the two approaches do not overwrite one another.
 
 ```text
-.
-├── core/          # simulation environment and market-making mechanics
-├── notebooks/     # numerical experiments and visualizations
-├── training/      # training routines for critic / actor
-├── config/        # constants and model parameters
-└── README.md
+outputs/
+├─ classic/
+│  ├─ single_bond/
+│  │  └─ bond_XX/
+│  │     ├─ targets.npz
+│  │     ├─ metrics.json
+│  │     ├─ model_checkpoint.pt
+│  │     └─ plots/
+│  └─ multi_bond/
+│     └─ bonds_XX_YY.../
+│        ├─ metrics.json
+│        ├─ model_checkpoint.pt
+│        └─ plots/
+└─ greedy/
+   ├─ single_bond/
+   │  └─ bond_XX/
+   │     ├─ targets.npz
+   │     ├─ metrics.json
+   │     ├─ model_checkpoint.pt
+   │     └─ plots/
+   └─ multi_bond/
+      └─ bonds_XX_YY.../
+         ├─ metrics.json
+         ├─ model_checkpoint.pt
+         └─ plots/
+         
+## How to run
+
+### Classic methodology
+
+#### Single-bond
+
+```bash
+python scripts/run_single_bond.py --bond 0 --methodology classic
+python scripts/plot_single_bond.py --bond 0 --methodology classic
+```
+
+#### Multi-bond
+
+```bash
+python scripts/run_multi_bond.py --bonds 0 5 --methodology classic --hidden_dim 12 --nb_steps 500
+python scripts/plot_multi_bond_learning.py --bonds 0 5 --methodology classic
+python scripts/plot_two_bond_surfaces.py --bonds 0 5 --methodology classic
+```
+
+### Greedy methodology
+
+#### Single-bond
+
+```bash
+python scripts/run_single_bond.py --bond 0 --methodology greedy
+python scripts/plot_single_bond.py --bond 0 --methodology greedy
+```
+
+#### Multi-bond
+
+```bash
+python scripts/run_multi_bond.py --bonds 0 5 --methodology greedy --hidden_dim 12 --nb_steps 500
+python scripts/plot_multi_bond_learning.py --bonds 0 5 --methodology greedy
+python scripts/plot_two_bond_surfaces.py --bonds 0 5 --methodology greedy
+```
