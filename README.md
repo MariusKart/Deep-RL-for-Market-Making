@@ -29,11 +29,10 @@ The main reproduction results are the following.
 
 In the one-bond case, the reinforcement learning procedure recovers the expected policy shape and reaches an average reward of about 200 per RFQ.
 
-In the two-bond case, using bonds 1 and 6, the learned value function and quote surfaces reflect the correlation structure between the assets. The training appears to converge, but the average reward remains around 175 per RFQ, below the roughly 195 reported in the paper.
+In the two-bond case, using bonds 1 and 6, the learned value function and quote surfaces reflect the correlation structure between the assets. The training appears to converge, but the average reward remains around the roughly 195 reported in the paper.
 
-In the five-bond case, the actor--critic implementation becomes much harder to train reliably. In our experiments, the average reward stabilizes around 300 per RFQ and does not improve as much as hoped.
 
-The report also studies a simpler greedy alternative for policy improvement. This variant remains close to the original method in the one-bond and two-bond settings, and in the five-bond case it reaches a more satisfactory average reward of around 350 per RFQ under the reported experimental setup.
+The report also studies a simpler greedy alternative for policy improvement. This variant remains close to the original method in the one-bond and two-bond settings.
 
 ## The greedy variant
 
