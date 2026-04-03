@@ -73,7 +73,7 @@ The single-bond pipeline follows the notebook:
 For the classic methodology, multi-bond warm-start relies on stored learned 1D datasets:
 - each single-bond run exports learned values and learned bid/ask quote curves,
 - multi-bond critic pretraining uses the additive approximation  
-  `V(q) ≈ Σ_i V_i(q_i)`,
+  $$V(q) ≈ Σ_i V_i(q_i)$$
 - each actor is pretrained from the corresponding stored 1D quote curve.
 
 For the greedy methodology, the current implementation keeps the table-actor spirit of the alternative notebook:
@@ -81,9 +81,9 @@ For the greedy methodology, the current implementation keeps the table-actor spi
 - table actors initialized from myopic probabilities,
 - greedy policy refresh during final training.
 
-## Output structure
+## Structure
 
-Outputs are separated by methodology so the two approaches do not overwrite one another.
+
 
 ```text
 outputs/
