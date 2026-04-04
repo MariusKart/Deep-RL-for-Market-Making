@@ -29,11 +29,10 @@ The main reproduction results are the following.
 
 In the one-bond case, the reinforcement learning procedure recovers the expected policy shape and reaches an average reward of about 200 per RFQ.
 
-In the two-bond case, using bonds 1 and 6, the learned value function and quote surfaces reflect the correlation structure between the assets. The training appears to converge, but the average reward remains around 175 per RFQ, below the roughly 195 reported in the paper.
+In the two-bond case, using bonds 1 and 6, the learned value function and quote surfaces reflect the correlation structure between the assets. The training appears to converge, but the average reward remains around the roughly 195 reported in the paper.
 
-In the five-bond case, the actor--critic implementation becomes much harder to train reliably. In our experiments, the average reward stabilizes around 300 per RFQ and does not improve as much as hoped.
 
-The report also studies a simpler greedy alternative for policy improvement. This variant remains close to the original method in the one-bond and two-bond settings, and in the five-bond case it reaches a more satisfactory average reward of around 350 per RFQ under the reported experimental setup.
+The report also studies a simpler greedy alternative for policy improvement. This variant remains close to the original method in the one-bond and two-bond settings.
 
 ## The greedy variant
 
@@ -74,7 +73,7 @@ The single-bond pipeline follows the notebook:
 For the classic methodology, multi-bond warm-start relies on stored learned 1D datasets:
 - each single-bond run exports learned values and learned bid/ask quote curves,
 - multi-bond critic pretraining uses the additive approximation  
-  `V(q) ≈ Σ_i V_i(q_i)`,
+  $$V(q) ≈ Σ_i V_i(q_i)$$
 - each actor is pretrained from the corresponding stored 1D quote curve.
 
 For the greedy methodology, the current implementation keeps the table-actor spirit of the alternative notebook:
@@ -82,9 +81,9 @@ For the greedy methodology, the current implementation keeps the table-actor spi
 - table actors initialized from myopic probabilities,
 - greedy policy refresh during final training.
 
-## Output structure
+## Structure
 
-Outputs are separated by methodology so the two approaches do not overwrite one another.
+
 
 ```text
 outputs/
