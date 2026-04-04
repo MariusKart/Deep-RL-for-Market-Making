@@ -176,7 +176,9 @@ def pretrain_critic(
     - input to critic = q / sizes
     """
     nb_bonds = len(grids)
-
+    if nb_bonds > 5:
+        n_dense = 10
+        max_steps = 8000
     interpolants = []
     dense_axes = []
 
