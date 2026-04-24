@@ -46,16 +46,8 @@ from .utils import (
 )
 
 
-# ---------------------------------------------------------------------
+
 # Small helpers
-# ---------------------------------------------------------------------
-
-def _validate_methodology(methodology: str) -> str:
-    methodology = str(methodology).lower().strip()
-    if methodology not in {"classic", "greedy"}:
-        raise ValueError("methodology must be either 'classic' or 'greedy'")
-    return methodology
-
 
 def _default_hidden_dim(nb_bonds: int) -> int:
     if nb_bonds == 1:
@@ -180,7 +172,7 @@ def _extract_single_bond_learned_dataset(
     - learned bid quote curve
     - learned ask quote curve
 
-    Symmetry is preserved:
+    Symmetry:
     - bid uses actor(q/size)
     - ask uses actor(-q/size)
     """
@@ -218,9 +210,9 @@ def _extract_single_bond_learned_dataset(
     return q_grid, values, deltas_bid, deltas_ask
 
 
-# ---------------------------------------------------------------------
+
 # Single-bond experiment
-# ---------------------------------------------------------------------
+
 
 def run_single_bond_experiment(
     bond: int,
@@ -249,7 +241,7 @@ def run_single_bond_experiment(
     seed: int = DEFAULT_SEED,
     device: str = DEFAULT_DEVICE,
 ):
-    methodology = _validate_methodology(methodology)
+
     set_seed(seed)
 
     selected_bonds = [int(bond)]
@@ -476,7 +468,7 @@ def ensure_single_bond_targets(
     If a required 1D learned dataset is missing, rerun that single-bond case
     under the requested methodology.
     """
-    methodology = _validate_methodology(methodology)
+
     selected_bonds = list(map(int, selected_bonds))
 
     for k, bond in enumerate(selected_bonds):
@@ -489,10 +481,7 @@ def ensure_single_bond_targets(
             )
 
 
-# ---------------------------------------------------------------------
 # Multi-bond experiment
-# ---------------------------------------------------------------------
-
 def run_multi_bond_experiment(
     selected_bonds,
     methodology: str = "classic",
@@ -523,7 +512,8 @@ def run_multi_bond_experiment(
     seed: int = DEFAULT_SEED,
     device: str = DEFAULT_DEVICE,
 ):
-    methodology = _validate_methodology(methodology)
+
+    
     selected_bonds = list(map(int, selected_bonds))
     if len(selected_bonds) == 0:
         raise ValueError("selected_bonds cannot be empty")
